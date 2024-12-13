@@ -13,8 +13,10 @@
     let prayerTimes: Partial<PrayerTimes> = {}; // Store the prayer times
     let adhanAudio: HTMLAudioElement;
     let interval: number;
-    const fetchInterval = 30000; // 60 seconds
+    const fetchInterval = 10000; // 10 seconds
     let audioEnabled = false; // Track if audio playback is enabled
+    let darkMode = false; // Track dark mode state
+    let lastPlayedPrayer: string | null = null; // Track the last prayer time for which Adhan was played
 
     async function fetchPrayerTimes() {
         try {
@@ -24,6 +26,11 @@
         } catch (error) {
             console.error('Failed to fetch prayer times:', error);
         }
+    }
+
+    function toggleDarkMode() {
+        darkMode = !darkMode;
+        document.body.classList.toggle('dark-mode', darkMode);
     }
 
     // Check every minute if the current time matches a prayer time
@@ -39,8 +46,13 @@
             console.log(`Checking ${p}:`, prayerTime);
 
             if (prayerTime && currentTimeStr === prayerTime) {
-                console.log(`Current time matches ${p}!`);
-                playAdhan();
+                if (lastPlayedPrayer !== p) {
+                    console.log(`Current time matches ${p}! Playing Adhan.`);
+                    playAdhan();
+                    lastPlayedPrayer = p; // Mark this prayer as played
+                } else {
+                    console.log(`Adhan for ${p} has already been played.`);
+                }
             }
         }
     }
@@ -69,12 +81,26 @@
         }
     }
 
+    function resetDailyPrayerState() {
+        lastPlayedPrayer = null;
+        console.log('Resetting last played prayer for the new day.');
+    }
+
     onMount(() => {
         fetchPrayerTimes();
         interval = setInterval(() => {
             fetchPrayerTimes();
             checkPrayerTime();
         }, fetchInterval);
+
+        const midnight = new Date();
+        midnight.setHours(24, 0, 0, 0); // Next midnight
+        const timeToMidnight = midnight.getTime() - Date.now();
+
+        setTimeout(() => {
+            resetDailyPrayerState();
+            setInterval(resetDailyPrayerState, 24 * 60 * 60 * 1000); // Reset daily
+        }, timeToMidnight);
     });
 
     onDestroy(() => {
@@ -83,17 +109,6 @@
 </script>
 
 <style>
-body {
-    font-family: 'Arial', sans-serif;
-    background: linear-gradient(to right, #2193b0, #6dd5ed);
-    color: #fff;
-    margin: 0;
-    padding: 0;
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
 
 /* Center the container with the table */
 .container {
@@ -107,6 +122,10 @@ body {
     width: 90%;
 }
 
+.container.dark-mode {
+    background: rgba(0, 0, 0, 0.5);
+}
+
 /* Table styles */
 table {
     width: 100%;
@@ -116,6 +135,11 @@ table {
     background: rgba(255, 255, 255, 0.8);
     border-radius: 8px;
     overflow: hidden;
+}
+
+table.dark-mode {
+    background: rgba(0, 0, 0, 0.5);
+    color: #fff;
 }
 
 th, td {
@@ -151,6 +175,18 @@ button:hover {
     background: #6dd5ed;
 }
 
+/* Toggle Button */
+.toggle-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.5rem;
+    color: inherit;
+    position: absolute;
+    top: 20px;
+    right: 20px;
+}
+
 /* Responsive */
 @media (max-width: 600px) {
     th, td {
@@ -164,10 +200,17 @@ button:hover {
 }
 </style>
 
-<div class="container">
+<div class="container {darkMode ? 'dark-mode' : ''}">
+    <button class="toggle-button" on:click={toggleDarkMode}>
+        {#if darkMode}
+            <i class="fas fa-sun"></i>
+        {:else}
+            <i class="fas fa-moon"></i>
+        {/if}
+    </button>
     <h1>Today's Prayer Times</h1>
     <p>Stay on top of your prayers with this schedule.</p>
-    <table>
+    <table class="{darkMode ? 'dark-mode' : ''}">
         <thead>
             <tr>
                 <th>Date</th>
