@@ -473,7 +473,7 @@ def calculate_prayer_times(latitude, longitude, timezone, method='ISNA'):
     # Format the times for comparison
     formatted_times = {key: datetime.strptime(times[key], "%H:%M").time() for key in times}
 	# Set Fajr to 18:24 for testing
-    formatted_times['fajr'] = datetime.strptime("18:29", "%H:%M").time()
+    # formatted_times['fajr'] = datetime.strptime("18:29", "%H:%M").time()
 
     return {'date': today, **formatted_times}
 
