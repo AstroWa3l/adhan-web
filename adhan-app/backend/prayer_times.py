@@ -424,30 +424,6 @@ prayTimes = PrayTimes()
 
 #-------------------------- Test Code --------------------------
 
-
-# def calculate_prayer_times(latitude, longitude, timezone, method='ISNA'):
-#     """
-#     Calculate prayer times for a given location and method.
-#     """
-#     # Set the calculation method
-#     prayTimes.setMethod(method)
-#     prayTimes.adjust({'asr': 'Standard'})
-
-#     # Calculate today's prayer times
-#     today = date.today()
-#     times = prayTimes.getTimes(today, (latitude, longitude), timezone)
-
-#     # Format the times for comparison
-#     formatted_times = {key: datetime.strptime(times[key], "%H:%M").time() for key in ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha']}
-
-#     # Add a modification for testing: set Fajr to one minute from now
-#     now = datetime.now()
-#     two_minute_from_now = (now + timedelta(minutes=2)).time()
-#     formatted_times['fajr'] = two_minute_from_now  # Set Fajr close to now for testing
-
-#     return {'date': today, **formatted_times}
-
-
 def calculate_prayer_times(latitude, longitude, timezone, method='ISNA'):
     """
     Calculate prayer times for a given location and method.

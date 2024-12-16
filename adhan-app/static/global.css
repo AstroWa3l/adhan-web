@@ -150,6 +150,63 @@ button:hover {
     }
 }
 
+/* Styles for location inputs */
+.location-inputs {
+    margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.location-inputs label {
+    margin: 0.5rem 0;
+    font-size: 1rem;
+    color: inherit;
+}
+
+.location-inputs input {
+    padding: 0.5rem;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    margin-top: 0.3rem;
+    width: 200px;
+}
+
+.location-inputs button {
+    background: linear-gradient(to right, #00FF7F, #6dd5ed);
+    color: #000;
+    border: none;
+    padding: 0.8rem 1.2rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    margin-top: 0.5rem;
+    transition: transform 0.2s, background 0.3s;
+}
+
+.location-inputs button:hover {
+    transform: scale(1.05);
+    background: linear-gradient(to right, #6dd5ed, #00FF7F);
+}
+
+/* Adjustments for dark mode */
+.container.dark-mode .location-inputs input {
+    background: #333;
+    color: #fff;
+    border: 1px solid #555;
+}
+
+.container.dark-mode .location-inputs button {
+    background: #804e9c;
+    background: -webkit-linear-gradient(to right, #804e9c, #6f99a8);
+    background: linear-gradient(to right, #804e9c, #6f99a8);
+    color: #d4e4f4;
+}
+
+.container.dark-mode .location-inputs button:hover {
+    background: linear-gradient(to right, #6f99a8, #804e9c);
+}
+
 /* Responsive */
 @media (max-width: 600px) {
     .container {
