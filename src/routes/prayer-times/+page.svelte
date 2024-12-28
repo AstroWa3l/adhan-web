@@ -22,44 +22,49 @@
     // New variables for user input
     let city = '';
     let country = '';
+    let state = '';
     let selectedMethod = 'ISNA'; // Default method
     let methods = ['MWL', 'ISNA', 'Egypt', 'Makkah', 'Karachi', 'Tehran', 'Jafari'];
     let loading = false;
     let errorMessage = '';
 
     async function fetchPrayerTimesByLocation() {
-        loading = true;
-        errorMessage = '';
+    loading = true;
+    errorMessage = '';
 
-        try {
-            if (!city || !country) {
-                errorMessage = 'City and Country are required to fetch prayer times.';
-                return;
-            }
-
-            const response = await fetch(
-                `http://127.0.0.1:8000/prayer-times?city=${city}&country=${country}&method=${selectedMethod}`
-            );
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.detail || 'Failed to fetch prayer times');
-            }
-
-            const data = await response.json();
-            prayerTimes = data;
-
-        } catch (error) {
-            if (error instanceof Error) {
-                errorMessage = error.message || 'An error occurred.';
-            } else {
-                errorMessage = 'An error occurred.';
-            }
-            console.error('Failed to fetch prayer times:', error);
-        } finally {
-            loading = false;
+    try {
+        if (!city || !country) {
+            errorMessage = 'City and Country are required to fetch prayer times.';
+            return;
         }
+
+        // Build query parameters dynamically
+        let queryParams = `city=${city}&country=${country}&method=${selectedMethod}`;
+        if (state) {
+            queryParams += `&state=${state}`;
+        }
+
+        const response = await fetch(`http://127.0.0.1:8000/prayer-times?${queryParams}`);
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.detail || 'Failed to fetch prayer times');
+        }
+
+        const data = await response.json();
+        prayerTimes = data;
+
+    } catch (error) {
+        if (error instanceof Error) {
+            errorMessage = error.message || 'An error occurred.';
+        } else {
+            errorMessage = 'An error occurred.';
+        }
+        console.error('Failed to fetch prayer times:', error);
+    } finally {
+        loading = false;
     }
+}
 
     function toggleDarkMode() {
         darkMode = !darkMode;
@@ -200,6 +205,11 @@
         />
         <input
             type="text"
+            placeholder="Enter state (optional)"
+            bind:value={state}
+        />
+        <input
+            type="text"
             placeholder="Enter country"
             bind:value={country}
         />
@@ -265,3 +275,4 @@
         on:ended={handleAdhanEnded}
     ></audio>
 </div>
+

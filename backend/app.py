@@ -18,37 +18,42 @@ app.add_middleware(
 GEOAPIFY_API_KEY = "YOUR_API_KEY"
 
 @app.get("/prayer-times")
-def get_prayer_times(
-    city: str = None,
-    country: str = None,
-    latitude: float = None,
-    longitude: float = None,
-    method: str = "ISNA"
-):
-    if city and country:
-        # Fetch coordinates and timezone from Geoapify API
-        geoapify_url = f"https://api.geoapify.com/v1/geocode/search?text={city},{country}&format=json&apiKey={GEOAPIFY_API_KEY}"
-        response = requests.get(geoapify_url)
-        if response.status_code != 200:
-            raise HTTPException(status_code=500, detail="Failed to fetch location data.")
-        data = response.json()
+def get_prayer_times(city: str, country: str, state: str = None, method: str = "ISNA"):
+    print(f"Received query parameters: city={city}, state={state}, country={country}, method={method}")
 
-        # Check if results are available
-        if "results" not in data or len(data["results"]) == 0:
-            raise HTTPException(status_code=404, detail="Location not found.")
-        location = data["results"][0]
-        latitude = location["lat"]
-        longitude = location["lon"]
-        timezone_offset = location["timezone"]["offset_STD_seconds"] // 3600  # Convert seconds to hours
+    # Construct the Geoapify query
+    query = f"{city},{country}"
+    if state:
+        query = f"{city},{state},{country}"
 
-    elif latitude is not None and longitude is not None:
-        # Handle case where latitude and longitude are directly provided
-        timezone_offset = -8  # Default to Pacific Time if timezone not available
-    else:
-        raise HTTPException(
-            status_code=400,
-            detail="Either city and country or latitude and longitude must be provided."
-        )
+    geoapify_url = f"https://api.geoapify.com/v1/geocode/search?text={query}&format=json&apiKey={GEOAPIFY_API_KEY}"
+    response = requests.get(geoapify_url)
+    if response.status_code != 200:
+        raise HTTPException(status_code=500, detail="Failed to fetch location data.")
+    data = response.json()
+    print("Geoapify API response:", data)
+
+    # Process results
+    results = data.get("results", [])
+    if not results:
+        raise HTTPException(status_code=404, detail="Location not found.")
+
+    # Filter results by state if provided
+    filtered_results = [
+        result for result in results
+        if state and result.get("state_code", "").lower() == state.lower()
+    ]
+
+    # Use the first filtered result if available, otherwise default to the first result
+    location = filtered_results[0] if filtered_results else results[0]
+
+    # Extract latitude, longitude, and timezone
+    latitude = location["lat"]
+    longitude = location["lon"]
+    timezone_offset = location.get("timezone", {}).get("offset_STD_seconds")
+    if timezone_offset is None:
+        raise HTTPException(status_code=500, detail="Timezone information is missing for the location.")
+    timezone_offset //= 3600  # Convert seconds to hours
 
     # Validate the method
     if method not in prayTimes.methods.keys():
