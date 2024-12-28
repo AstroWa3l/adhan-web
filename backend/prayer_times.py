@@ -114,7 +114,7 @@ class PrayTimes():
 
 	#---------------------- Default Settings --------------------
 
-	calcMethod = 'MWL'
+	calcMethod = 'ISNA'
 
 	# do not change anything here; use adjust method instead
 	settings = {
@@ -420,7 +420,7 @@ class PrayTimes():
 
 #---------------------- prayTimes Object -----------------------
 
-prayTimes = PrayTimes()
+prayTimes = PrayTimes("ISNA")
 
 #-------------------------- Test Code --------------------------
 
@@ -459,6 +459,15 @@ def calculate_prayer_times(latitude, longitude, timezone, method='ISNA'):
     Returns:
         dict: Prayer times for the given date and location.
     """
+    # Validate method
+    if method not in prayTimes.methods.keys():
+        raise ValueError(
+            f"Invalid method: {method}. Valid methods are: {', '.join(prayTimes.methods.keys())}."
+        )
+    
+    # Log the method being used
+    print(f"Calculating prayer times using method: {method}")
+    
     # Set the calculation method
     prayTimes.setMethod(method)
     prayTimes.adjust({'asr': 'Standard'})  # Use standard method for Asr calculation
@@ -467,15 +476,12 @@ def calculate_prayer_times(latitude, longitude, timezone, method='ISNA'):
     today = date.today()
     times = prayTimes.getTimes(today, (latitude, longitude), timezone)
 
-	# Only keep time [Fajr,Duhur,Asr,Maghrib,Isha]
+    # Keep only the relevant times
     times = {key: times[key] for key in ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha']}
 
-    # Format the times for comparison
+    # Format the times
     formatted_times = {key: datetime.strptime(times[key], "%H:%M").time() for key in times}
-	# Set Fajr to 18:24 for testing
-    # formatted_times['fajr'] = datetime.strptime("18:29", "%H:%M").time()
-
-    return {'date': today, **formatted_times}
+    return {"date": today, **formatted_times}
 
 def monitor_and_update_prayer_times(latitude, longitude, timezone, method, sound_file):
     """
