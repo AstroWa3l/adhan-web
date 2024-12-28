@@ -9,7 +9,7 @@
         maghrib: string;
         isha: string;
     }
-    
+
     let prayerTimes: Partial<PrayerTimes> = {};
     let adhanAudio: HTMLAudioElement;
     let interval: number;
@@ -17,15 +17,47 @@
     let audioEnabled = false;
     let darkMode = false;
     let lastPlayedPrayer: string | null = null;
-    let isAdhanPlaying = false; // Track if Adhan is currently playing
+    let isAdhanPlaying = false;
 
-    async function fetchPrayerTimes() {
+    // New variables for user input
+    let city = '';
+    let country = '';
+    let selectedMethod = 'ISNA'; // Default method
+    let methods = ['MWL', 'ISNA', 'Egypt', 'Makkah', 'Karachi', 'Tehran', 'Jafari'];
+    let loading = false;
+    let errorMessage = '';
+
+    async function fetchPrayerTimesByLocation() {
+        loading = true;
+        errorMessage = '';
+
         try {
-            const res = await fetch('http://127.0.0.1:8000/prayer-times');
-            const data = await res.json();
+            if (!city || !country) {
+                errorMessage = 'City and Country are required to fetch prayer times.';
+                return;
+            }
+
+            const response = await fetch(
+                `http://127.0.0.1:8000/prayer-times?city=${city}&country=${country}&method=${selectedMethod}`
+            );
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || 'Failed to fetch prayer times');
+            }
+
+            const data = await response.json();
             prayerTimes = data;
+
         } catch (error) {
+            if (error instanceof Error) {
+                errorMessage = error.message || 'An error occurred.';
+            } else {
+                errorMessage = 'An error occurred.';
+            }
             console.error('Failed to fetch prayer times:', error);
+        } finally {
+            loading = false;
         }
     }
 
@@ -38,7 +70,6 @@
         const now = new Date();
         const currentTimeStr = now.toTimeString().slice(0, 5); // "HH:MM"
 
-        console.log('Current Time:', currentTimeStr);
         console.log('Prayer Times:', prayerTimes);
 
         for (const p of ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha']) {
@@ -47,11 +78,8 @@
 
             if (prayerTime && currentTimeStr === prayerTime) {
                 if (lastPlayedPrayer !== p) {
-                    console.log(`Current time matches ${p}! Playing Adhan.`);
                     playAdhan();
                     lastPlayedPrayer = p;
-                } else {
-                    console.log(`Adhan for ${p} has already been played.`);
                 }
             }
         }
@@ -63,7 +91,6 @@
                 .then(() => {
                     adhanAudio.pause();
                     audioEnabled = true;
-                    console.log('Audio permission granted.');
                 })
                 .catch((err) => console.error('Failed to enable audio:', err));
         }
@@ -75,7 +102,6 @@
             adhanAudio.play()
                 .then(() => {
                     isAdhanPlaying = true;
-                    console.log('Adhan started playing.');
                 })
                 .catch((err) => console.error('Adhan playback failed:', err));
         }
@@ -86,24 +112,19 @@
             adhanAudio.pause();
             adhanAudio.currentTime = 0;
             isAdhanPlaying = false;
-            console.log('Adhan playback stopped.');
         }
     }
 
     function resetDailyPrayerState() {
         lastPlayedPrayer = null;
-        console.log('Resetting last played prayer for the new day.');
     }
 
     function handleAdhanEnded() {
         isAdhanPlaying = false;
-        console.log('Adhan finished playing.');
     }
 
     onMount(() => {
-        fetchPrayerTimes();
         interval = setInterval(() => {
-            fetchPrayerTimes();
             checkPrayerTime();
         }, fetchInterval);
 
@@ -130,121 +151,33 @@
 </script>
 
 <style>
-    /* Center the container with the table */
-    .container {
-        background: rgba(255, 255, 255, 0.2);
-        padding: 2rem;
-        border-radius: 12px;
-        backdrop-filter: blur(8px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        text-align: center;
-        max-width: 800px;
-        width: 90%;
-    }
-
-    .container.dark-mode {
-        background: rgba(0, 0, 0, 0.5);
-    }
-
-    /* Table styles */
-    table {
-        width: 100%;
-        border-collapse: collapse;
+    /* Add custom styles for inputs and dropdown */
+    .location-form {
         margin: 1rem 0;
-        color: #333;
-        background: rgba(255, 255, 255, 0.9);
-        border-radius: 8px;
-        overflow: hidden;
-        transition: background 0.3s ease, color 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: center;
     }
 
-    table.dark-mode {
-        background: rgba(30, 30, 30, 0.9);
-        color: #e0e0e0;
-    }
-
-    th, td {
-        padding: 1rem;
-        text-align: center;
-        border: 1px solid rgba(200, 200, 200, 0.5);
-    }
-
-    th {
-        background: #00FF7F;
-        color: #000000;
-        font-size: 1.2rem;
-    }
-
-    td {
+    .location-form input,
+    .location-form select {
+        padding: 0.8rem;
         font-size: 1rem;
-    }
-
-    /* Buttons */
-    button {
-        background: linear-gradient(to right, #00FF7F, #6dd5ed);
-        color: #000000;
-        border: none;
-        padding: 0.8rem 1.5rem;
-        margin-top: 1rem;
+        border: 1px solid #ccc;
         border-radius: 8px;
-        cursor: pointer;
+        width: 80%;
+    }
+
+    .error-message {
+        color: red;
         font-size: 1rem;
-        transition: transform 0.2s, background 0.3s;
+        margin: 0.5rem 0;
     }
 
-    button:hover {
-        transform: scale(1.1);
-        background: linear-gradient(to right, #6dd5ed, #00FF7F);
-    }
-
-    /* Toggle Button */
-    .toggle-button {
-        background: none;
-        border: none;
-        cursor: pointer;
-        font-size: 1.5rem;
-        color: inherit;
-        position: absolute;
-        top: 20px;
-        right: 20px;
-        transition: transform 0.3s ease;
-    }
-
-    .toggle-button:hover {
-        transform: scale(1.2);
-    }
-
-    /* Adhan playing feedback */
-    .adhan-playing {
+    .loading {
         font-size: 1.2rem;
         color: #00FF7F;
-        margin: 20px 0;
-        animation: fadeIn 1s ease-in-out;
-    }
-
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-        }
-        to {
-            opacity: 1;
-        }
-    }
-
-    /* Responsive */
-    @media (max-width: 600px) {
-        .container {
-            padding: 1rem;
-        }
-
-        th, td {
-            font-size: 0.9rem;
-            padding: 0.5rem;
-        }
-
-        button {
-            font-size: 0.9rem;
-        }
     }
 </style>
 
@@ -258,6 +191,38 @@
     </button>
     <h1>Today's Prayer Times</h1>
     <p>Stay on top of your prayers with this schedule.</p>
+
+    <div class="location-form">
+        <input
+            type="text"
+            placeholder="Enter city"
+            bind:value={city}
+        />
+        <input
+            type="text"
+            placeholder="Enter country"
+            bind:value={country}
+        />
+        <div style="display: flex; align-items: center; gap: 0.5rem; width: 80%;">
+            <label for="method-select">Select method:</label>
+            <select id="method-select" bind:value={selectedMethod}>
+                {#each methods as method}
+                    <option value={method}>{method}</option>
+                {/each}
+            </select>
+        </div>
+        <button on:click={fetchPrayerTimesByLocation}>
+            {loading ? 'Fetching...' : 'Get Prayer Times'}
+        </button>
+        {#if errorMessage}
+            <p class="error-message">{errorMessage}</p>
+        {/if}
+    </div>
+
+    {#if loading}
+        <p class="loading">Loading prayer times...</p>
+    {/if}
+
     <table class="{darkMode ? 'dark-mode' : ''}">
         <thead>
             <tr>
