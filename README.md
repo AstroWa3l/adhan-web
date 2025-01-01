@@ -1,7 +1,7 @@
 # adhan-web
 Simple Web app for prayer times
 
-![Image of the app](https://github.com/AstroWa3l/adhan-web/blob/main/static/Screenshot%202024-12-14%20at%202.39.45%E2%80%AFPM.png)
+![Image of the app](https://github.com/AstroWa3l/adhan-web/blob/main/static/new_pic.png)
 
 ## Running the app locally
 1. Clone the repository
