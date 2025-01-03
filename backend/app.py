@@ -3,6 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 import requests
 from datetime import datetime, date
 from prayer_times import calculate_prayer_times, prayTimes
+import os
+from dotenv import load_dotenv
 
 app = FastAPI()
 
@@ -15,9 +17,12 @@ app.add_middleware(
 )
 
 # Geoapify API Key (replace with your actual key)
-GEOAPIFY_API_KEY = "YOUR_API_KEY"
+# Load environment variables from .env file
+load_dotenv()
 
-@app.get("/prayer-times")
+GEOAPIFY_API_KEY = os.getenv("GEOAPIFY_API_KEY")
+
+@app.get("/")
 def get_prayer_times(city: str, country: str, state: str = None, method: str = "ISNA"):
     print(f"Received query parameters: city={city}, state={state}, country={country}, method={method}")
 
