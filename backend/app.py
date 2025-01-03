@@ -15,7 +15,7 @@ app.add_middleware(
 )
 
 # Geoapify API Key (replace with your actual key)
-GEOAPIFY_API_KEY = "8c2ef5ff4e55494a99a719955bc092af"
+GEOAPIFY_API_KEY = "Your_API_Key"
 
 @app.get("/")
 def get_prayer_times(city: str, country: str, state: str = None, method: str = "ISNA"):
