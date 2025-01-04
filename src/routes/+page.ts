@@ -1,5 +1,10 @@
 export async function load({ fetch }) {
-    const res = await fetch('http://127.0.0.1:8000/prayer-times');
+    const city = encodeURIComponent('Acton');
+    const state = encodeURIComponent('CA');
+    const country = encodeURIComponent('United States');
+    const method = encodeURIComponent('ISNA');
+
+    const res = await fetch(`http://127.0.0.1:8000/?city=${city}&state=${state}&country=${country}&method=${method}`);
     if (!res.ok) {
         console.error('Failed to fetch prayer times:', res.status, res.statusText);
         return { prayerTimes: {} };

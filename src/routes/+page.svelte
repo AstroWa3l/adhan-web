@@ -38,10 +38,10 @@
             return;
         }
 
-        // Build query parameters dynamically
-        let queryParams = `city=${city}&country=${country}&method=${selectedMethod}`;
+        // Encode parameters to avoid 422 if special characters are used
+        let queryParams = `city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}&method=${encodeURIComponent(selectedMethod)}`;
         if (state) {
-            queryParams += `&state=${state}`;
+            queryParams += `&state=${encodeURIComponent(state)}`;
         }
 
         const response = await fetch(`http://127.0.0.1:8000/?${queryParams}`);
