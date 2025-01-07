@@ -3,3 +3,4 @@ pandas
 playsound
 requests
 uvicorn
+python-dotenv
